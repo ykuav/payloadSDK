@@ -12,18 +12,18 @@ void CleanupWinsock();
 SOCKET connection(std::string Ip, int Port);
 
 class Msg {
-private:
-    uint8_t header = 0x8D;
-    uint8_t len;
-    uint8_t msgId;
-    std::vector<uint8_t> payload;
-    uint8_t checksum;
-public:
-    std::vector<uint8_t> GetMsg();
-    void SetMsgId(uint8_t msgId);
-    void SetPayload(const std::vector<uint8_t>& payload);
-    const std::vector<uint8_t>& GetPayload();
-    int length();
+    private:
+        uint8_t header = 0x8D;
+        uint8_t len;
+        uint8_t msgId;
+        std::vector<uint8_t> payload;
+        uint8_t checksum;
+    public:
+        std::vector<uint8_t> GetMsg();
+        void SetMsgId(uint8_t msgId);
+        void SetPayload(const std::vector<uint8_t>& payload);
+        const std::vector<uint8_t>& GetPayload();
+        int length();
 };
 
 class CrcUtil {
@@ -35,4 +35,6 @@ private:
 };
 
 void printHex(const std::vector<uint8_t>& data);
+std::string WideToUtf8(const std::wstring& wstr);
+std::wstring Utf8ToWide(const std::string& str);
 #endif

@@ -1,7 +1,9 @@
 #include "MegaphoneService.h"
+#include "http_client.h"
 #include "common.h"
 #include <iostream>
 #include <string>
+#include <map>
 
 // 全局变量
 static SOCKET client = INVALID_SOCKET;
@@ -91,115 +93,97 @@ void MegaphoneService_StopTTS() {
 }
 
 // 上传音频文件
-BOOL MegaphoneService_UploadFile(LPCWSTR filePath, LPWSTR errorMessage, DWORD errorSize) {
+BOOL MegaphoneService_UploadFile() {
+    std::string url = HttpServerUrl + "/upload-file";
+
     HINTERNET hSession = NULL, hConnect = NULL, hRequest = NULL;
     BOOL result = FALSE;
-
-    // 1. 初始化WinHTTP会话
-    /*hSession = WinHttpOpen(
-        L"WinHTTP Example/1.0",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-        WINHTTP_NO_PROXY_NAME,
-        WINHTTP_NO_PROXY_BYPASS,
-        0
-    );
-    if (!hSession) {
-        swprintf_s(errorMessage, errorSize, L"WinHttpOpen失败: %d", GetLastError());
-        goto cleanup;
+    /******************************* POST请求示例 ******************************/
+    HttpClient client;
+    if (!client.Initialize(L"My WinHttp Client/1.0")) {
+        std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
+        return FALSE;
     }
 
-    // 2. 解析URL
-    URL_COMPONENTS urlComp = { sizeof(URL_COMPONENTS) };
-    WCHAR host[256] = { 0 }, path[1024] = { 0 };
-    urlComp.lpszHostName = host;
-    urlComp.dwHostNameLength = ARRAYSIZE(host);
-    urlComp.lpszUrlPath = path;
-    urlComp.dwUrlPathLength = ARRAYSIZE(path);
+    // Set custom headers (optional)
+    std::map<std::wstring, std::wstring> headers;
+    headers[L"Accept"] = L"application/json";
+    headers[L"User-Agent"] = L"My Custom User Agent";
+    client.SetHeaders(headers);
+    std::string requestBody = "{\"name\":\"John\",\"age\":30}";
+    std::string responseBody;
+    DWORD statusCode = 0;
 
-    if (!WinHttpCrackUrl(url, wcslen(url), 0, &urlComp)) {
-        swprintf_s(errorMessage, errorSize, L"URL解析失败: %d", GetLastError());
-        goto cleanup;
+    std::wcout << L"\nPerforming POST request..." << std::endl;
+
+    if (client.Post(Utf8ToWide(url), requestBody, L"multipart/form-data", responseBody, statusCode)) {
+        std::cout << "Status code: " << statusCode << std::endl;
+        std::cout << "Response body: " << responseBody << std::endl;
     }
-
-    // 3. 连接到服务器
-    hConnect = WinHttpConnect(
-        hSession,
-        host,
-        urlComp.nPort,
-        0
-    );
-    if (!hConnect) {
-        swprintf_s(errorMessage, errorSize, L"WinHttpConnect失败: %d", GetLastError());
-        goto cleanup;
+    else {
+        std::wcout << L"POST request failed: " << client.GetLastErrorMessage() << std::endl;
     }
-
-    // 4. 创建HTTP请求
-    hRequest = WinHttpOpenRequest(
-        hConnect,
-        L"POST",
-        path,
-        NULL,
-        WINHTTP_NO_REFERER,
-        WINHTTP_DEFAULT_ACCEPT_TYPES,
-        (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0
-    );
-    if (!hRequest) {
-        swprintf_s(errorMessage, errorSize, L"WinHttpOpenRequest失败: %d", GetLastError());
-        goto cleanup;
-    }
-
-    // 5. 读取文件内容
-    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-        swprintf_s(errorMessage, errorSize, L"文件打开失败: %ls", filePath);
-        goto cleanup;
-    }
-    DWORD fileSize = static_cast<DWORD>(file.tellg());
-    file.seekg(0, std::ios::beg);
-    char* buffer = new char[fileSize];
-    file.read(buffer, fileSize);
-    file.close();
-
-    // 6. 设置请求头（示例：上传二进制文件）
-    LPCWSTR headers = L"Content-Type: application/octet-stream\r\n";
-    if (!WinHttpSendRequest(
-        hRequest,
-        headers,
-        -1L,
-        buffer,
-        fileSize,
-        fileSize,
-        0
-    )) {
-        swprintf_s(errorMessage, errorSize, L"WinHttpSendRequest失败: %d", GetLastError());
-        delete[] buffer;
-        goto cleanup;
-    }
-    delete[] buffer;
-
-    // 7. 接收响应（可选）
-    if (!WinHttpReceiveResponse(hRequest, NULL)) {
-        swprintf_s(errorMessage, errorSize, L"WinHttpReceiveResponse失败: %d", GetLastError());
-        goto cleanup;
-    }
-
-    result = TRUE;
-
-cleanup:
-    if (hRequest) WinHttpCloseHandle(hRequest);
-    if (hConnect) WinHttpCloseHandle(hConnect);
-    if (hSession) WinHttpCloseHandle(hSession);*/
     return result;
 }
 
 // 获取音频文件列表
 void MegaphoneService_GetFileList() {
     std::string url = HttpServerUrl + "/fetch-files";
+
+    HttpClient client;
+    if (!client.Initialize(L"My WinHttp Client/1.0")) {
+        std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
+        return;
+    }
+
+    // Set custom headers (optional)
+    std::map<std::wstring, std::wstring> headers;
+    headers[L"Accept"] = L"application/json";
+    headers[L"User-Agent"] = L"My Custom User Agent";
+    client.SetHeaders(headers);
+
+    std::string responseBody;
+    DWORD statusCode = 0;
+
+    std::wcout << L"Performing GET request..." << std::endl;
+
+    if (client.Get(Utf8ToWide(url), responseBody, statusCode)) {
+        std::cout << "Status code: " << statusCode << std::endl;
+        std::cout << "Response body: " << responseBody << std::endl;
+    }
+    else {
+        std::wcout << L"GET request failed: " << client.GetLastErrorMessage() << std::endl;
+    }
 }
 
 // 删除音频文件
-void MegaphoneService_DelFile() {
+BOOL MegaphoneService_DelFile(std::string fileName) {
     std::string url = HttpServerUrl + "/del-file";
+
+    HttpClient client;
+    if (!client.Initialize(L"My WinHttp Client/1.0")) {
+        std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
+        return FALSE;
+    }
+
+    // Set custom headers (optional)
+    std::map<std::wstring, std::wstring> headers;
+    headers[L"Accept"] = L"application/json";
+    headers[L"User-Agent"] = L"My Custom User Agent";
+    client.SetHeaders(headers);
+    std::string requestBody = "{\"filename\":"+ fileName +"}";
+    std::string responseBody;
+    DWORD statusCode = 0;
+
+    std::wcout << L"\nPerforming POST request..." << std::endl;
+
+    if (client.Post(Utf8ToWide(url), requestBody, L"application/json", responseBody, statusCode)) {
+        std::cout << "Status code: " << statusCode << std::endl;
+        std::cout << "Response body: " << responseBody << std::endl;
+    }
+    else {
+        std::wcout << L"POST request failed: " << client.GetLastErrorMessage() << std::endl;
+    }
 }
 
 // 播放音频
