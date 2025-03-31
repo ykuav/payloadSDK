@@ -43,7 +43,7 @@ bool GripperService_Connection() {
     client = connection(Ip, Port);
     if (client == INVALID_SOCKET) {
         IsConned = false;
-        return false;
+        return !(client == INVALID_SOCKET);
     }
 
     IsConned = true;

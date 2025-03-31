@@ -179,7 +179,7 @@
       </DisableSpecificWarnings>
       <AdditionalIncludeDirectories>opus/include</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
       <SupportJustMyCode>true</SupportJustMyCode>
     </ClCompile>
@@ -193,6 +193,7 @@
       <OutputFile>include;src;celt;silk</OutputFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);opus.lib;</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
