@@ -20,14 +20,8 @@ extern "C" {
     GRIPPERSERVICE_API void GripperService_DisConnected();
     GRIPPERSERVICE_API bool GripperService_IsConnected();
 
-    // 上升
-    GRIPPERSERVICE_API void GripperService_Rise();
-    // 下降
-    GRIPPERSERVICE_API void GripperService_Decline();
     // 抓取
     GRIPPERSERVICE_API void GripperService_Grab();
-    // 紧急制动
-    GRIPPERSERVICE_API void GripperService_Stop();
     // 松开
     GRIPPERSERVICE_API void GripperService_Release();
 }

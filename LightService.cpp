@@ -178,6 +178,12 @@ void LightService_OpenLight(int open) {
     payload[0] = static_cast<uint8_t>(open);
     msg.SetPayload(payload);
     LightService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+
+    // 如果是关灯，也要把爆闪模式关掉，防止开着爆闪时关灯导致下次开灯还会是爆闪模式
+    if (open == 0) {
+        Sleep(100);
+        LightService_SharpFlash(0);
+    }
 }
 
 // 亮度调整

@@ -14,9 +14,7 @@ static std::string Ip = "192.168.144.30"; // 必须使用std::string，不然C#传过来的
 static int Port = 8519;
 static bool IsConned = false;
 
-static uint8_t GRIPPER_RISE_OR_DECLINE = 0x35;
-static uint8_t EMITTER_GRAB_OR_RELEASE = 0x36;
-static uint8_t GRIPPER_STOP = 0x37;
+static uint8_t EMITTER_GRAB_OR_RELEASE = 0x35;
 
 // 清理函数
 void GripperService_Cleanup() {
@@ -74,54 +72,22 @@ void GripperService_SendData(const char* data, int length) {
     }
 }
 
-// 上升
-void GripperService_Rise() {
-    Msg msg;
-    msg.SetMsgId(GRIPPER_RISE_OR_DECLINE);
-    std::vector<uint8_t> payload(1);
-    payload[0] = static_cast<uint8_t>(0x00);
-    msg.SetPayload(payload);
-    GripperService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
-}
-
-// 下降
-void GripperService_Decline() {
-    Msg msg;
-    msg.SetMsgId(GRIPPER_RISE_OR_DECLINE);
-    std::vector<uint8_t> payload(1);
-    payload[0] = static_cast<uint8_t>(0x01);
-    msg.SetPayload(payload);
-    GripperService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
-}
-
 // 抓取
 void GripperService_Grab() {
     Msg msg;
     msg.SetMsgId(EMITTER_GRAB_OR_RELEASE);
     std::vector<uint8_t> payload(1);
-    payload[0] = static_cast<uint8_t>(0x01);
-    msg.SetPayload(payload);
-    GripperService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
-}
-
-// 紧急制动
-void GripperService_Stop() {
-    Msg msg;
-    msg.SetMsgId(GRIPPER_STOP);
-    std::vector<uint8_t> payload(1);
-    payload[0] = static_cast<uint8_t>(0x01);
+    payload[0] = static_cast<uint8_t>(0x00);
     msg.SetPayload(payload);
     GripperService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
 // 松开
 void GripperService_Release() {
-    GripperService_Stop();
-    Sleep(100);
     Msg msg;
     msg.SetMsgId(EMITTER_GRAB_OR_RELEASE);
     std::vector<uint8_t> payload(1);
-    payload[0] = static_cast<uint8_t>(0x00);
+    payload[0] = static_cast<uint8_t>(0x01);
     msg.SetPayload(payload);
     GripperService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
