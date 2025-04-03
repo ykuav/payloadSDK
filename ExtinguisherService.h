@@ -23,7 +23,7 @@ extern "C" {
     EXTINGUISHERSERVICE_API void ExtinguisherService_DisConnected();
     EXTINGUISHERSERVICE_API bool ExtinguisherService_IsConnected();
 
-    // 操作灭火罐开关，0关，1开
+    // 操作灭火罐开关，0关，1开（灭火罐会在打开一段时间后，自动关，无需调用关闭命令,实际上即使调用关闭命令也不起作用）
     EXTINGUISHERSERVICE_API void ExtinguisherService_Operate(int operateType);
     // 发送心跳包
     EXTINGUISHERSERVICE_API void ExtinguisherService_Heartbeat();

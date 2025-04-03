@@ -21,8 +21,7 @@ int myOpus_encoder_create(int sample_rate, int channels, int* error) {
     return encoder_handle;
 }
 
-int myOpus_encode(int handle, const float* pcm, int frame_size,
-    unsigned char* output, int max_size) {
+int myOpus_encode(int handle, const float* pcm, int frame_size, unsigned char* output, int max_size) {
     auto it = encoders.find(handle);
     if (it == encoders.end()) return OPUS_BAD_ARG;
 
@@ -53,8 +52,7 @@ int myOpus_decoder_create(int sample_rate, int channels, int* error) {
     return decoder_handle;
 }
 
-int myOpus_decode(int handle, const unsigned char* data, int len,
-    float* pcm, int frame_size) {
+int myOpus_decode(int handle, float* pcm, int frame_size, const unsigned char* data, int len) {
     auto it = decoders.find(handle);
     if (it == decoders.end()) return OPUS_BAD_ARG;
 

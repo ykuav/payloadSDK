@@ -168,9 +168,9 @@ void FourInOneService_StopPlayAudio() {
 }
 
 // 播放警报
-void FourInOneService_PlayAlarm(int type) {
+void FourInOneService_PlayAlarm() {
     FourInOneService_StopPlayAlarm();
-    std::string alarmPlay = (type == 0) ? "[18]" : "[44]";
+    std::string alarmPlay = "[18]";
     FourInOneService_SendData(alarmPlay.c_str(), alarmPlay.length());
 }
 
@@ -222,6 +222,11 @@ void FourInOneService_OpenLight(int open) {
     payload[0] = static_cast<uint8_t>(open);
     msg.SetPayload(payload);
     FourInOneService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+    // 如果是关灯，也要把爆闪模式关掉，防止开着爆闪时关灯导致下次开灯还会是爆闪模式
+    if (open == 0) {
+        Sleep(100);
+        FourInOneService_SharpFlash(0);
+    }
 }
 
 // 亮度调整

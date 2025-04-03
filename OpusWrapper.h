@@ -14,5 +14,5 @@ OPUS_API void myOpus_encoder_destroy(int encoder_handle);
 
 // ½âÂëÆ÷½Ó¿Ú
 OPUS_API int myOpus_decoder_create(int sample_rate, int channels, int* error);
-OPUS_API int myOpus_decode(int decoder_handle, const unsigned char* data, int len, float* pcm, int frame_size);
+OPUS_API int myOpus_decode(int decoder_handle, float* pcm, int frame_size, const unsigned char* data, int len);
 OPUS_API void myOpus_decoder_destroy(int decoder_handle);

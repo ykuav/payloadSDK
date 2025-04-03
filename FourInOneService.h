@@ -44,7 +44,7 @@ extern "C" {
     // 停止播放音频文件
     FOURINONESERVICE_API void FourInOneService_StopPlayAudio();
     // 播放警报
-    FOURINONESERVICE_API void FourInOneService_PlayAlarm(int type);
+    FOURINONESERVICE_API void FourInOneService_PlayAlarm();
     // 停止播放警报
     FOURINONESERVICE_API void FourInOneService_StopPlayAlarm();
     // 俯仰控制

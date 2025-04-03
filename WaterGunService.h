@@ -23,7 +23,7 @@ extern "C" {
     WATERGUNSERVICE_API void WaterGunService_DisConnected();
     WATERGUNSERVICE_API bool WaterGunService_IsConnected();
 
-    // 操作灭火罐开关，0关，1开
+    // 操作水枪开关，0关，1开
     WATERGUNSERVICE_API void WaterGunService_Operate(int operateType);
     // 发送心跳包
     WATERGUNSERVICE_API void WaterGunService_Heartbeat();
