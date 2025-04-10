@@ -37,4 +37,6 @@ private:
 void printHex(const std::vector<uint8_t>& data);
 std::string WideToUtf8(const std::wstring& wstr);
 std::wstring Utf8ToWide(const std::string& str);
+bool UploadFile(const std::wstring& serverUrl, const std::wstring& filePath);
+std::string UrlEncode(const std::string& value);
 #endif

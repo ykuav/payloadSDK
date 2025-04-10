@@ -2,6 +2,7 @@
 #include "common.h"
 #include <iostream>
 #include <thread>
+#include "http_client.h"
 
 // 全局变量
 static SOCKET client = INVALID_SOCKET;
@@ -9,6 +10,7 @@ static SOCKET servoControlClient = INVALID_SOCKET;
 static std::string Ip = "192.168.144.27"; // 必须使用std::string，不然C#传过来的ip后半部分会乱码
 static int Port = 8519;
 static bool IsConned = false;
+static std::string HttpServerUrl = "http://" + Ip + ":8222";
 
 static uint8_t OPEN_CLOSE_LIGHT = 0x01; // 开关灯
 static uint8_t LUMINANCE_CHANGE = 0x02; // 亮度
@@ -98,7 +100,7 @@ bool FourInOneService_Connection() {
     }
 
     IsConned = true;
-    FourInOneService_SetVolumn(50);
+    FourInOneService_SetVolumn(30);
     std::thread t(dataReceive);
     t.detach();
     return true;
@@ -153,6 +155,108 @@ void FourInOneService_PlayTTS(int voiceType, int loop, const char* text) {
 void FourInOneService_StopTTS() {
     std::string stopTTS = "[17]";
     FourInOneService_SendData(stopTTS.c_str(), stopTTS.length());
+}
+
+
+// 上传音频文件
+bool FourInOneService_UploadFile(const wchar_t* filePath) {
+    std::string url = HttpServerUrl + "/upload-file";
+    std::wstring filePathStr(filePath);
+    bool result = UploadFile(Utf8ToWide(url), filePathStr);
+    if (result) {
+        std::wcout << L"File uploaded successfully!" << std::endl;
+    }
+    else {
+        std::wcout << L"Upload failed!" << std::endl;
+    }
+    return result;
+}
+
+// 获取音频文件列表
+const char* FourInOneService_GetFileList() {
+    std::string url = HttpServerUrl + "/fetch-files";
+
+    HttpClient client;
+    if (!client.Initialize(L"My WinHttp Client/1.0")) {
+        std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
+        return "{\"code\": -1, \"data\": \"Failed to initialize HTTP client\"}";
+    }
+
+    // Set custom headers (optional)
+    std::map<std::wstring, std::wstring> headers;
+    headers[L"Accept"] = L"application/json";
+    headers[L"User-Agent"] = L"My Custom User Agent";
+    client.SetHeaders(headers);
+
+    std::string responseBody;
+    DWORD statusCode = 0;
+
+    std::wcout << L"Performing GET request..." << std::endl;
+
+    if (client.Get(Utf8ToWide(url), responseBody, statusCode)) {
+        std::cout << "Status code: " << statusCode << std::endl;
+        std::cout << "Response body: " << responseBody << std::endl;
+        char* result = new char[responseBody.size() + 1]; // 分配内存
+        strcpy_s(result, responseBody.size() + 1, responseBody.c_str());
+        return result; // 返回 C 风格字符串
+    }
+    else {
+        std::wcout << L"GET request failed: " << client.GetLastErrorMessage() << std::endl;
+        std::string data = WideToUtf8(client.GetLastErrorMessage());
+        char* result = new char[data.size() + 1]; // 分配内存
+        strcpy_s(result, data.size() + 1, data.c_str());
+        return result; // 返回 C 风格字符串
+    }
+}
+
+// 删除音频文件
+bool FourInOneService_DelFile(const wchar_t* audioName) {
+    std::string url = HttpServerUrl + "/del-file";
+    std::wstring fileName(audioName);
+
+    HttpClient client;
+    if (!client.Initialize(L"My WinHttp Client/1.0")) {
+        std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
+        return FALSE;
+    }
+
+    // 构建表单键值对
+    std::vector<std::pair<std::wstring, std::wstring>> formData = {
+        { L"filename", fileName }
+    };
+    // 编码为 x-www-form-urlencoded 格式
+    std::string encodedBody;
+    for (const auto& pair : formData) {
+
+        std::string utf8_key = WideToUtf8(pair.first);
+        std::string utf8_value = WideToUtf8(pair.second);
+
+        std::string encoded_key = UrlEncode(utf8_key);
+        std::string encoded_value = UrlEncode(utf8_value);
+
+        if (!encodedBody.empty()) encodedBody += "&";
+        encodedBody += encoded_key + "=" + encoded_value;
+    }
+    std::string response;
+    DWORD statusCode = 0;
+    // 调用 Post 方法
+    bool success = client.Post(
+        Utf8ToWide(url),                        // URL
+        encodedBody,                            // 编码后的表单数据
+        L"application/x-www-form-urlencoded",   // Content-Type
+        response,                               // 响应内容
+        statusCode                              // HTTP 状态码
+    );
+
+    std::wcout << L"\nPerforming POST request..." << std::endl;
+
+    if (success) {
+        std::cout << "Status code: " << statusCode << std::endl;
+        std::cout << "Response body: " << response << std::endl;
+    }
+    else {
+        std::wcout << L"POST request failed: " << client.GetLastErrorMessage() << std::endl;
+    }
 }
 
 // 播放音频

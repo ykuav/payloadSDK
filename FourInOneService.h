@@ -34,11 +34,11 @@ extern "C" {
     // 停止文字转语音播放
     FOURINONESERVICE_API void FourInOneService_StopTTS();
     // 上传音频文件
-    FOURINONESERVICE_API BOOL FourInOneService_UploadFile(LPCWSTR filePath, LPWSTR errorMessage, DWORD errorSize);
+    FOURINONESERVICE_API bool FourInOneService_UploadFile(const wchar_t* filePath);
     // 获取音频文件
-    FOURINONESERVICE_API void FourInOneService_GetFileList();
+    FOURINONESERVICE_API const char* FourInOneService_GetFileList();
     // 删除音频文件
-    FOURINONESERVICE_API void FourInOneService_DelFile();
+    FOURINONESERVICE_API bool FourInOneService_DelFile(const wchar_t* audioName);
     // 播放音频文件
     FOURINONESERVICE_API void FourInOneService_PlayAudio(const char* audioName, int loop);
     // 停止播放音频文件

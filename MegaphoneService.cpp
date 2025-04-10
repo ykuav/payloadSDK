@@ -36,7 +36,7 @@ bool MegaphoneService_Connection() {
         return !(client == INVALID_SOCKET);
     }
     IsConned = true;
-    MegaphoneService_SetVolumn(50);
+    MegaphoneService_SetVolumn(30);
     return true;
 }
 
@@ -92,47 +92,27 @@ void MegaphoneService_StopTTS() {
 }
 
 // 上传音频文件
-BOOL MegaphoneService_UploadFile() {
+bool MegaphoneService_UploadFile(const wchar_t* filePath) {
     std::string url = HttpServerUrl + "/upload-file";
-
-    HINTERNET hSession = NULL, hConnect = NULL, hRequest = NULL;
-    BOOL result = FALSE;
-    /******************************* POST请求示例 ******************************/
-    HttpClient client;
-    if (!client.Initialize(L"My WinHttp Client/1.0")) {
-        std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
-        return FALSE;
-    }
-
-    // Set custom headers (optional)
-    std::map<std::wstring, std::wstring> headers;
-    headers[L"Accept"] = L"application/json";
-    headers[L"User-Agent"] = L"My Custom User Agent";
-    client.SetHeaders(headers);
-    std::string requestBody = "{\"name\":\"John\",\"age\":30}";
-    std::string responseBody;
-    DWORD statusCode = 0;
-
-    std::wcout << L"\nPerforming POST request..." << std::endl;
-
-    if (client.Post(Utf8ToWide(url), requestBody, L"multipart/form-data", responseBody, statusCode)) {
-        std::cout << "Status code: " << statusCode << std::endl;
-        std::cout << "Response body: " << responseBody << std::endl;
+    std::wstring filePathStr(filePath);
+    bool result = UploadFile(Utf8ToWide(url), filePathStr);
+    if (result) {
+        std::wcout << L"File uploaded successfully!" << std::endl;
     }
     else {
-        std::wcout << L"POST request failed: " << client.GetLastErrorMessage() << std::endl;
+        std::wcout << L"Upload failed!" << std::endl;
     }
     return result;
 }
 
 // 获取音频文件列表
-void MegaphoneService_GetFileList() {
+const char* MegaphoneService_GetFileList() {
     std::string url = HttpServerUrl + "/fetch-files";
 
     HttpClient client;
     if (!client.Initialize(L"My WinHttp Client/1.0")) {
         std::wcout << L"Failed to initialize HTTP client: " << client.GetLastErrorMessage() << std::endl;
-        return;
+        return "{\"code\": -1, \"data\": \"Failed to initialize HTTP client\"}";
     }
 
     // Set custom headers (optional)
@@ -149,15 +129,23 @@ void MegaphoneService_GetFileList() {
     if (client.Get(Utf8ToWide(url), responseBody, statusCode)) {
         std::cout << "Status code: " << statusCode << std::endl;
         std::cout << "Response body: " << responseBody << std::endl;
+        char* result = new char[responseBody.size() + 1]; // 分配内存
+        strcpy_s(result, responseBody.size() + 1, responseBody.c_str());
+        return result; // 返回 C 风格字符串
     }
     else {
         std::wcout << L"GET request failed: " << client.GetLastErrorMessage() << std::endl;
+        std::string data = WideToUtf8(client.GetLastErrorMessage());
+        char* result = new char[data.size() + 1]; // 分配内存
+        strcpy_s(result, data.size() + 1, data.c_str());
+        return result; // 返回 C 风格字符串
     }
 }
 
 // 删除音频文件
-BOOL MegaphoneService_DelFile(std::string fileName) {
+bool MegaphoneService_DelFile(const wchar_t* audioName) {
     std::string url = HttpServerUrl + "/del-file";
+    std::wstring fileName(audioName);
 
     HttpClient client;
     if (!client.Initialize(L"My WinHttp Client/1.0")) {
@@ -165,20 +153,39 @@ BOOL MegaphoneService_DelFile(std::string fileName) {
         return FALSE;
     }
 
-    // Set custom headers (optional)
-    std::map<std::wstring, std::wstring> headers;
-    headers[L"Accept"] = L"application/json";
-    headers[L"User-Agent"] = L"My Custom User Agent";
-    client.SetHeaders(headers);
-    std::string requestBody = "{\"filename\":"+ fileName +"}";
-    std::string responseBody;
+    // 构建表单键值对
+    std::vector<std::pair<std::wstring, std::wstring>> formData = {
+        { L"filename", fileName }
+    };
+    // 编码为 x-www-form-urlencoded 格式
+    std::string encodedBody;
+    for (const auto& pair : formData) {
+
+        std::string utf8_key = WideToUtf8(pair.first);
+        std::string utf8_value = WideToUtf8(pair.second);
+
+        std::string encoded_key = UrlEncode(utf8_key);
+        std::string encoded_value = UrlEncode(utf8_value);
+
+        if (!encodedBody.empty()) encodedBody += "&";
+        encodedBody += encoded_key + "=" + encoded_value;
+    }
+    std::string response;
     DWORD statusCode = 0;
+    // 调用 Post 方法
+    bool success = client.Post(
+        Utf8ToWide(url),                        // URL
+        encodedBody,                            // 编码后的表单数据
+        L"application/x-www-form-urlencoded",   // Content-Type
+        response,                               // 响应内容
+        statusCode                              // HTTP 状态码
+    );
 
     std::wcout << L"\nPerforming POST request..." << std::endl;
 
-    if (client.Post(Utf8ToWide(url), requestBody, L"application/json", responseBody, statusCode)) {
+    if (success) {
         std::cout << "Status code: " << statusCode << std::endl;
-        std::cout << "Response body: " << responseBody << std::endl;
+        std::cout << "Response body: " << response << std::endl;
     }
     else {
         std::wcout << L"POST request failed: " << client.GetLastErrorMessage() << std::endl;

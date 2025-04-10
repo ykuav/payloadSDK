@@ -4,6 +4,9 @@
 #include <ws2tcpip.h>
 #include <vector>
 #include <iomanip>
+#include <winhttp.h>
+#include <fstream>
+#include <sstream>
 #pragma comment(lib, "ws2_32.lib")
 
 // 初始化 Winsock
@@ -135,12 +138,34 @@ void printHex(const std::vector<uint8_t>& data) {
 
 // Helper function to convert wide string to UTF-8
 std::string WideToUtf8(const std::wstring& wstr) {
-    if (wstr.empty()) return std::string();
+    if (wstr.empty()) return "";
 
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
+    int utf8_length = WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        wstr.c_str(),
+        static_cast<int>(wstr.length()),
+        nullptr,
+        0,
+        nullptr,
+        nullptr
+    );
+
+    if (utf8_length == 0) return "";
+
+    std::string utf8_str(utf8_length, 0);
+    WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        wstr.c_str(),
+        static_cast<int>(wstr.length()),
+        &utf8_str[0],
+        utf8_length,
+        nullptr,
+        nullptr
+    );
+
+    return utf8_str;
 }
 
 // Helper function to convert UTF-8 to wide string
@@ -151,4 +176,182 @@ std::wstring Utf8ToWide(const std::string& str) {
     std::wstring wstrTo(size_needed, 0);
     MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstrTo[0], size_needed);
     return wstrTo;
+}
+
+// 生成 multipart 请求体
+std::vector<BYTE> BuildMultipartBody(const std::wstring& filePath, const std::string& boundary) {
+    std::vector<BYTE> body;
+
+    // 1. 读取文件内容
+    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file");
+    }
+
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<char> fileData(fileSize);
+    file.read(fileData.data(), fileSize);
+
+    // 2. 转换文件名到 UTF-8 并转义
+    std::string filenameUtf8 = WideToUtf8(filePath.substr(filePath.find_last_of(L"\\/") + 1)); // 提取文件名
+    std::string escapedFilename;
+    for (char c : filenameUtf8) {
+        if (c == '"' || c == '\\' || c == '\r' || c == '\n') {
+            escapedFilename.push_back('\\');
+        }
+        escapedFilename.push_back(c);
+    }
+
+    // 3. 构造 multipart 头部
+    std::string partHeader =
+        "--" + boundary + "\r\n"
+        "Content-Disposition: form-data; name=\"file\"; "
+        "filename=\"" + escapedFilename + "\"; "
+        "filename*=UTF-8''" + escapedFilename + "\r\n"
+        "Content-Type: application/octet-stream\r\n\r\n";
+
+    // 4. 合并头部和文件数据
+    body.insert(body.end(), partHeader.begin(), partHeader.end());
+    body.insert(body.end(), fileData.begin(), fileData.end());
+
+    // 5. 添加结束边界
+    std::string partFooter = "\r\n--" + boundary + "--\r\n";
+    body.insert(body.end(), partFooter.begin(), partFooter.end());
+
+    return body;
+}
+
+bool UploadFile(const std::wstring& serverUrl, const std::wstring& filePath) {
+    // 1. 初始化 WinHttp
+    HINTERNET hSession = WinHttpOpen(
+        L"WinHttp Uploader",
+        WINHTTP_ACCESS_TYPE_NO_PROXY,
+        WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS,
+        0
+    );
+    if (!hSession) return false;
+    // 2. 解析 URL
+    URL_COMPONENTS urlComp = { 0 };
+    urlComp.dwStructSize = sizeof(urlComp);
+    urlComp.dwSchemeLength = -1;
+    urlComp.dwHostNameLength = -1;
+    urlComp.dwUrlPathLength = -1;
+
+    if (!WinHttpCrackUrl(serverUrl.c_str(), serverUrl.length(), 0, &urlComp)) {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    // 提取 Host（确保字符串正确终止）
+    std::wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
+
+    // 3. 连接服务器
+    HINTERNET hConnect = WinHttpConnect(
+        hSession,
+        host.c_str(),  // 使用正确终止的字符串
+        urlComp.nPort,
+        0
+    );
+    if (!hConnect) {
+        DWORD dwError = GetLastError();
+        std::cerr << "WinHttpConnect failed with error: " << dwError << std::endl;
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    // 4. 创建请求
+    HINTERNET hRequest = WinHttpOpenRequest(
+        hConnect,
+        L"POST",
+        urlComp.lpszUrlPath,
+        NULL,
+        WINHTTP_NO_REFERER,
+        WINHTTP_DEFAULT_ACCEPT_TYPES,
+        (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0
+    );
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    // 生成请求体时，使用窄字符（UTF-8）的 boundary
+    std::string boundary = "---------------------------" + std::to_string(GetTickCount64());
+    std::vector<BYTE> requestBody = BuildMultipartBody(filePath, boundary);
+
+    // 设置请求头时，将 boundary 转换为宽字符（WinHTTP 需要宽字符头）
+    std::wstring headers =
+        L"Content-Type: multipart/form-data; boundary=" + Utf8ToWide(boundary) + L"\r\n"
+        L"Content-Length: " + std::to_wstring(requestBody.size()) + L"\r\n";
+
+    if (!WinHttpAddRequestHeaders(
+        hRequest,
+        headers.c_str(),
+        -1L,
+        WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE
+    )) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    // 7. 发送请求
+    if (!WinHttpSendRequest(
+        hRequest,
+        WINHTTP_NO_ADDITIONAL_HEADERS,
+        0,
+        requestBody.data(),
+        static_cast<DWORD>(requestBody.size()),
+        static_cast<DWORD>(requestBody.size()),
+        0
+    )) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    // 8. 接收响应
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    // 9. 读取响应数据
+    std::string response;
+    DWORD bytesRead = 0;
+    do {
+        char buffer[4096];
+        if (!WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead)) {
+            break;
+        }
+        if (bytesRead > 0) {
+            response.append(buffer, bytesRead);
+        }
+    } while (bytesRead > 0);
+    // 10. 清理资源
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    // 输出响应
+    std::cout << "Server response: " << response << std::endl;
+    return true;
+}
+
+// URL 编码函数
+std::string UrlEncode(const std::string& value) {
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex << std::uppercase; // 使用大写字母
+
+    for (unsigned char c : value) { // 明确使用无符号字符
+        if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+        }
+        else {
+            escaped << '%' << std::setw(2) << static_cast<int>(c);
+        }
+    }
+
+    return escaped.str();
 }
