@@ -36,8 +36,7 @@ void FourInOneService_SetIp(const char* ip) {
 // 数据接收
 static void dataReceive() {
     try {
-        while (FourInOneService_IsConnected())
-        {
+        while (FourInOneService_IsConnected()) {
             uint8_t recvBuffer[1024];
             const int bytesReceived = recv(client,
                 reinterpret_cast<char*>(recvBuffer),
@@ -48,38 +47,34 @@ static void dataReceive() {
                 if (error == WSAEWOULDBLOCK) continue;
                 throw std::runtime_error("接收失败，错误码: " + std::to_string(error));
             }
+            if (bytesReceived == 0) continue;
 
-            if (bytesReceived == 0) {
-                continue;
-            }
-            std::vector<uint8_t> tmp;
-            // 收音信息以“[40]”开头
-            uint8_t radioTarget[4] = { '[', '4', '0', ']' };
+            static std::vector<uint8_t> tmp;
+            const uint8_t radioTarget[4] = { '[', '4', '0', ']' };
+
             for (int i = 0; i < bytesReceived; ++i) {
-                if (tmp.empty()) {
-                    if (recvBuffer[i] == '[') {
-                        tmp.push_back(recvBuffer[i]);
-                    }
-                }
-                else {
-                    // 当遇到'['且tmp不为空时，可能是两个报文连到一块了，先触发回调函数，再清空tmp
-                    if (recvBuffer[i] == '[') {
-                        if (std::equal(std::begin(tmp), std::begin(tmp) + 4, std::begin(radioTarget))) {
-                            for (RadioCallback radioCallback : radioCallbacks) {
-                                radioCallback(tmp.data(), tmp.size());
-                            }
+                if (recvBuffer[i] == '[') {
+                    // 检测到新报文头，且tmp已有数据时触发回调
+                    if (!tmp.empty() && tmp.size() >= 4 &&
+                        std::equal(tmp.begin(), tmp.begin() + 4, radioTarget))
+                    {
+                        for (RadioCallback cb : radioCallbacks) {
+                            cb(tmp.data(), tmp.size());
                         }
-                        tmp.clear();
                     }
-                    tmp.push_back(recvBuffer[i]);
+                    tmp.clear();
                 }
+                tmp.push_back(recvBuffer[i]);
             }
-            if (!tmp.empty() && std::equal(std::begin(tmp), std::begin(tmp) + 4, std::begin(radioTarget))) {
-                for (RadioCallback radioCallback : radioCallbacks) {
-                    std::cerr << "四合一接收到消息：" << std::endl;
-                    printHex(tmp);
-                    radioCallback(tmp.data(), tmp.size());
+
+            // 处理缓冲区末尾的残留数据（可选）
+            if (!tmp.empty() && tmp.size() >= 4 &&
+                std::equal(tmp.begin(), tmp.begin() + 4, radioTarget))
+            {
+                for (RadioCallback cb : radioCallbacks) {
+                    cb(tmp.data(), tmp.size());
                 }
+                tmp.clear();
             }
         }
     }
@@ -203,9 +198,12 @@ const char* FourInOneService_GetFileList() {
     else {
         std::wcout << L"GET request failed: " << client.GetLastErrorMessage() << std::endl;
         std::string data = WideToUtf8(client.GetLastErrorMessage());
-        char* result = new char[data.size() + 1]; // 分配内存
-        strcpy_s(result, data.size() + 1, data.c_str());
-        return result; // 返回 C 风格字符串
+        std::string reslutStr = "{\"code\": -1, \"data\": \"" + data + "\"}";
+        char* result = new char[reslutStr.size() + 1];
+
+        // 复制数据
+        strcpy_s(result, reslutStr.size() + 1, reslutStr.c_str());
+        return result;
     }
 }
 

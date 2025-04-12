@@ -67,7 +67,7 @@ void MegaphoneService_SendData(const char* data, int length) {
 // 实时喊话
 void MegaphoneService_RealTimeShout(uint8_t* data, int length) {
     std::string realTimeShout = "[42]";
-    std::string combinedData = realTimeShout + reinterpret_cast<const char*>(data);
+    std::string combinedData = realTimeShout + std::string(reinterpret_cast<const char*>(data), length);
     MegaphoneService_SendData(combinedData.c_str(), combinedData.length());
 }
 
@@ -136,9 +136,12 @@ const char* MegaphoneService_GetFileList() {
     else {
         std::wcout << L"GET request failed: " << client.GetLastErrorMessage() << std::endl;
         std::string data = WideToUtf8(client.GetLastErrorMessage());
-        char* result = new char[data.size() + 1]; // 分配内存
-        strcpy_s(result, data.size() + 1, data.c_str());
-        return result; // 返回 C 风格字符串
+        std::string reslutStr = "{\"code\": -1, \"data\": \"" + data + "\"}";
+        char* result = new char[reslutStr.size() + 1];
+
+        // 复制数据
+        strcpy_s(result, reslutStr.size() + 1, reslutStr.c_str());
+        return result;
     }
 }
 
