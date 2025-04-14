@@ -2,7 +2,6 @@
 #include <string>
 #include <winsock2.h>
 #include <windows.h>
-#include <winhttp.h>
 
 #ifdef MEGAPHONESERVICE_EXPORTS
 #define MEGAPHONESERVICE_API __declspec(dllexport)
