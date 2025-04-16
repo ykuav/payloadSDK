@@ -60,6 +60,12 @@
     <ClInclude Include="OpusWrapper.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BucketService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WaterBranchService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -111,6 +117,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="OpusWrapper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BucketService.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterBranchService.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

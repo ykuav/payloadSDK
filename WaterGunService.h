@@ -2,7 +2,7 @@
 #include <string>
 #include <winsock2.h>
 #include <windows.h>
-// ˮǹ
+// ��ϴˮǹ
 #ifdef WATERGUNDLL_EXPORTS
 #define WATERGUNSERVICE_API __declspec(dllexport)
 #else

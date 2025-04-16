@@ -66,9 +66,26 @@ void MegaphoneService_SendData(const char* data, int length) {
 
 // 实时喊话
 void MegaphoneService_RealTimeShout(uint8_t* data, int length) {
-    std::string realTimeShout = "[42]";
-    std::string combinedData = realTimeShout + std::string(reinterpret_cast<const char*>(data), length);
-    MegaphoneService_SendData(combinedData.c_str(), combinedData.length());
+    // [1] 将字符串前缀"[42]"转换为字节序列
+    const std::string realTimeShout = "[42]";
+
+    // [2] 直接构造二进制数据块，包含前缀和原始数据（含0x00）
+    std::vector<uint8_t> combinedData;
+    combinedData.reserve(realTimeShout.size() + length);
+
+    // 添加前缀字节
+    combinedData.insert(combinedData.end(),
+        reinterpret_cast<const uint8_t*>(realTimeShout.data()),
+        reinterpret_cast<const uint8_t*>(realTimeShout.data() + realTimeShout.size()));
+
+    // 添加原始数据（含0x00）
+    combinedData.insert(combinedData.end(), data, data + length);
+
+    // [3] 发送完整二进制数据（无截断）
+    MegaphoneService_SendData(
+        reinterpret_cast<const char*>(combinedData.data()),
+        combinedData.size()
+    );
 }
 
 // 设置音量

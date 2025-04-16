@@ -1,4 +1,4 @@
-#include "WaterGunService.h"
+#include "WaterBranchService.h"
 #include "common.h"
 #include <string>
 #include <iostream>
@@ -10,24 +10,25 @@ static std::vector<uint8_t> recvDataLast(128);
 
 // 全局变量
 static SOCKET client = INVALID_SOCKET;
-static std::string Ip = "192.168.144.33"; // 必须使用std::string，不然C#传过来的ip后半部分会乱码
+static std::string Ip = "192.168.144.35"; // 必须使用std::string，不然C#传过来的ip后半部分会乱码
 static int Port = 8519;
 static bool IsConned = false;
 
-static uint8_t WATERGUN_OPERATE = 0x35;          // 开、关
-static uint8_t WATERGUN_STATE_SEND = 0x26;       // 发送心跳包
-static uint8_t WATERGUN_STATE_RECEIVE = 0x25;    // 接收心跳包
+static uint8_t WATERBRANCH_STATE_RECEIVE = 0x25; // 接收心跳包
+static uint8_t WATERBRANCH_STATE_SEND = 0x26; // 发送心跳包
+static uint8_t WATERBRANCH_HOSE_RELEASE = 0x2B; // 释放水带
+static uint8_t WATERBRANCH_HOSE_DETACHMENT = 0x2C; // 水带脱困
 
-static std::vector<WaterGunServiceStateCallback> waterGunStateCallbacks;
+static std::vector<WaterBranchServiceStateCallback> bucketStateCallbacks;
 
 // 清理函数
-void WaterGunService_Cleanup() {
+void WaterBranchService_Cleanup() {
     if (client != INVALID_SOCKET) closesocket(client);
     CleanupWinsock();
 }
 
 // 设置IP
-void WaterGunService_SetIp(const char* ip) {
+void WaterBranchService_SetIp(const char* ip) {
     Ip = std::string(ip);
 }
 
@@ -88,8 +89,8 @@ static bool parseByte(uint8_t b) {
 // 数据接收
 static void dataReceive() {
     try {
-        std::cerr << WaterGunService_IsConnected() << std::endl;
-        while (WaterGunService_IsConnected())
+        std::cerr << WaterBranchService_IsConnected() << std::endl;
+        while (WaterBranchService_IsConnected())
         {
             uint8_t recvBuffer[1024];
             const int bytesReceived = recv(client,
@@ -110,12 +111,12 @@ static void dataReceive() {
                 if (parseByte(recvBuffer[i])) {
                     // 打印获取到的数据
                     printHex(recvDataLast);
-                    for (WaterGunServiceStateCallback waterGunStateCallback : waterGunStateCallbacks) {
+                    for (WaterBranchServiceStateCallback WaterBranchStateCallback : bucketStateCallbacks) {
                         if (recvDataLast[0] != 0x8D) {
                             continue;
                         }
-                        if (recvDataLast[2] == WATERGUN_STATE_RECEIVE) {
-                            waterGunStateCallback(recvDataLast[3]);
+                        if (recvDataLast[2] == WATERBRANCH_STATE_RECEIVE) {
+                            WaterBranchStateCallback(recvDataLast[3]);
                         }
                     }
                 }
@@ -123,13 +124,13 @@ static void dataReceive() {
         }
     }
     catch (const std::exception& e) {
-        std::cerr << "水枪消息接收错误: " << e.what() << std::endl;
-        WaterGunService_DisConnected();
+        std::cerr << "消防水枪消息接收错误: " << e.what() << std::endl;
+        WaterBranchService_DisConnected();
     }
 }
 
 // 连接
-bool WaterGunService_Connection() {
+bool WaterBranchService_Connection() {
     if (IsConned) return true;
 
     client = connection(Ip, Port);
@@ -145,50 +146,60 @@ bool WaterGunService_Connection() {
 }
 
 // 断开连接
-void WaterGunService_DisConnected() {
+void WaterBranchService_DisConnected() {
     if (!IsConned) return;
     closesocket(client);
     IsConned = false;
 }
 
 // 检查连接状态
-bool WaterGunService_IsConnected() {
+bool WaterBranchService_IsConnected() {
     return IsConned && client != INVALID_SOCKET;
 }
 
 // 发送数据
-void WaterGunService_SendData(const char* data, int length) {
-    if (!WaterGunService_IsConnected()) return;
+void WaterBranchService_SendData(const char* data, int length) {
+    if (!WaterBranchService_IsConnected()) return;
     try {
         send(client, data, length, 0);
     }
     catch (const std::exception& e) {
-        std::cerr << "水枪消息发送失败: " << e.what() << std::endl;
-        WaterGunService_DisConnected();
+        std::cerr << "消防水枪消息发送失败: " << e.what() << std::endl;
+        WaterBranchService_DisConnected();
     }
 }
 
-// 操作水枪开关，0关，1开
-void WaterGunService_Operate(int operateType) {
+// 释放水带，0关，1开
+void WaterBranchService_HoseRelease(int operateType) {
     Msg msg;
-    msg.SetMsgId(WATERGUN_OPERATE);
+    msg.SetMsgId(WATERBRANCH_HOSE_RELEASE);
     std::vector<uint8_t> payload(4);
     payload[0] = static_cast<uint8_t>(operateType);
     msg.SetPayload(payload);
-    WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+    WaterBranchService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
+// 水带脱困，0关，1开
+void WaterBranchService_HoseDetachment(int operateType) {
+    Msg msg;
+    msg.SetMsgId(WATERBRANCH_HOSE_DETACHMENT);
+    std::vector<uint8_t> payload(4);
+    payload[0] = static_cast<uint8_t>(operateType);
+    msg.SetPayload(payload);
+    WaterBranchService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
 // 发送心跳包
-void WaterGunService_Heartbeat() {
+void WaterBranchService_Heartbeat() {
     Msg msg;
-    msg.SetMsgId(WATERGUN_STATE_SEND);
+    msg.SetMsgId(WATERBRANCH_STATE_SEND);
     std::vector<uint8_t> payload(4);
     msg.SetPayload(payload);
-    WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+    WaterBranchService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
 // 注册消防水枪状态回调函数
-void WaterGunService_RegisterCallback(WaterGunServiceStateCallback callback)
+void WaterBranchService_RegisterCallback(WaterBranchServiceStateCallback callback)
 {
-    waterGunStateCallbacks.push_back(callback);
+    bucketStateCallbacks.push_back(callback);
 }
