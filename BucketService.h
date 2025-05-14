@@ -10,7 +10,7 @@
 #endif
 
 // 回调函数类型定义
-typedef void(__stdcall* BucketServiceStateCallback)(int state);
+typedef void(__stdcall* BucketServiceStateCallback)(uint8_t* data, int length);
 
 // C接口封装
 extern "C" {

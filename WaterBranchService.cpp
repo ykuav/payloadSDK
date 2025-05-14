@@ -116,7 +116,7 @@ static void dataReceive() {
                             continue;
                         }
                         if (recvDataLast[2] == WATERBRANCH_STATE_RECEIVE) {
-                            WaterBranchStateCallback(recvDataLast[3]);
+                            WaterBranchStateCallback(recvDataLast.data(), recvDataLast.size());
                         }
                     }
                 }

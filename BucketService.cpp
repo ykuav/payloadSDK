@@ -116,7 +116,7 @@ static void dataReceive() {
                             continue;
                         }
                         if (recvDataLast[2] == BUCKET_STATE_RECEIVE) {
-                            BucketStateCallback(recvDataLast[3]);
+                            BucketStateCallback(recvDataLast.data(), recvDataLast.size());
                         }
                     }
                 }
