@@ -23,8 +23,18 @@ extern "C" {
     WATERGUNSERVICE_API void WaterGunService_DisConnected();
     WATERGUNSERVICE_API bool WaterGunService_IsConnected();
 
-    // 操作水枪开关，0关，1开
-    WATERGUNSERVICE_API void WaterGunService_Operate(int operateType);
+    // 操作水枪手动模式时，向左转
+    WATERGUNSERVICE_API void toLeft();
+    // 操作水枪手动模式时，向右转
+    WATERGUNSERVICE_API void toRight();
+    /* 操作水枪模式切换
+    * 状态为0时，不可用
+    * 状态为1时，发送该命令会变成自动模式，即水枪自动左右转，状态会变为2
+    * 状态为2时，发送该命令，水枪停止左右转动，状态变为3，水枪慢慢回归中点，然后自动变为手动模式，状态变为4
+    * 状态为4时，发送该命令，状态变为5，与状态1一致
+    * 注：状态值从回调函数里面获取
+    * */
+    WATERGUNSERVICE_API void modeSwitch();
     // 发送心跳包
     WATERGUNSERVICE_API void WaterGunService_Heartbeat();
 

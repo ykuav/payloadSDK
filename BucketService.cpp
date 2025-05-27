@@ -169,7 +169,7 @@ void BucketService_SendData(const char* data, int length) {
     }
 }
 
-// 操作吊桶开关，0停，1开（升），2关（降）
+// 操作水桶开关，0停，1开（升），2关（降）
 void BucketService_BarrelControl(int controlType) {
     Msg msg;
     msg.SetMsgId(BUCKET_BARREL_CONTROL);
