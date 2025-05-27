@@ -14,7 +14,9 @@ static std::string Ip = "192.168.144.33"; // 必须使用std::string，不然C#传过来的
 static int Port = 8519;
 static bool IsConned = false;
 
-static uint8_t WATERGUN_OPERATE = 0x35;          // 开、关
+static uint8_t WATERGUN_TOLEFT = 0x33; // 往左
+static uint8_t WATERGUN_TORIGHT = 0x34; // 往右
+static uint8_t WATERGUN_MODESWITCH = 0x35;       // 模式切换
 static uint8_t WATERGUN_STATE_SEND = 0x26;       // 发送心跳包
 static uint8_t WATERGUN_STATE_RECEIVE = 0x25;    // 接收心跳包
 
@@ -168,12 +170,34 @@ void WaterGunService_SendData(const char* data, int length) {
     }
 }
 
-// 操作水枪开关，0关，1开
-void WaterGunService_Operate(int operateType) {
+// 水枪往左
+void WaterGunService_ToLeft() {
     Msg msg;
-    msg.SetMsgId(WATERGUN_OPERATE);
+    msg.SetMsgId(WATERGUN_TOLEFT);
     std::vector<uint8_t> payload(4);
-    payload[0] = static_cast<uint8_t>(operateType);
+    msg.SetPayload(payload);
+    WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
+// 水枪往右
+void WaterGunService_ToRight() {
+    Msg msg;
+    msg.SetMsgId(WATERGUN_TORIGHT);
+    std::vector<uint8_t> payload(4);
+    msg.SetPayload(payload);
+    WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
+/* 操作水枪模式切换
+* 状态为0时，不可用
+* 状态为1时，发送该命令会变成自动模式，即水枪自动左右转，状态会变为2
+* 状态为2时，发送该命令，水枪停止左右转动，状态变为3，水枪慢慢回归中点，然后自动变为手动模式，状态变为4
+* 状态为4时，发送该命令，状态变为5，与状态1一致
+* */
+void WaterGunService_ModeSwitch() {
+    Msg msg;
+    msg.SetMsgId(WATERGUN_MODESWITCH);
+    std::vector<uint8_t> payload(4);
     msg.SetPayload(payload);
     WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }

@@ -24,7 +24,7 @@ extern "C" {
     BUCKETSERVICE_API bool BucketService_IsConnected();
 
     // 操作吊桶开关，0停，1开（升），2关（降）
-    BUCKETSERVICE_API void BucketService_BarrelControl(int operateType);
+    BUCKETSERVICE_API void BucketService_BarrelControl(int controlType);
     // 操作挂钩开关，0关，1开
     BUCKETSERVICE_API void BucketService_HookControl(int controlType);
 
