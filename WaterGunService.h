@@ -10,7 +10,7 @@
 #endif
 
 // 回调函数类型定义
-typedef void(__stdcall* WaterGunServiceStateCallback)(int state);
+typedef void(__stdcall* WaterGunServiceStateCallback)(int state, int locationStatus);
 
 // C接口封装
 extern "C" {

@@ -117,7 +117,7 @@ static void dataReceive() {
                             continue;
                         }
                         if (recvDataLast[2] == WATERGUN_STATE_RECEIVE) {
-                            waterGunStateCallback(recvDataLast[3]);
+                            waterGunStateCallback(recvDataLast[3], recvDataLast[4]);
                         }
                     }
                 }
