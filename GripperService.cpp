@@ -3,6 +3,9 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <mstcpip.h>  // 关键头文件
+#include <thread>
+#pragma comment(lib, "Ws2_32.lib")  // 链接库
 
 static int parseIndex = 0;
 static std::vector<uint8_t> recvData(128);
@@ -13,6 +16,7 @@ static SOCKET client = INVALID_SOCKET;
 static std::string Ip = "192.168.144.30"; // 必须使用std::string，不然C#传过来的ip后半部分会乱码
 static int Port = 8519;
 static bool IsConned = false;
+static WSAEVENT g_networkEvent = WSACreateEvent();
 
 static uint8_t EMITTER_GRAB_OR_RELEASE = 0x35;
 
@@ -34,6 +38,29 @@ static void resetBuffer() {
     recvData.resize(128, 0); // 初始化128字节缓冲区
 }
 
+// 断开连接
+void GripperService_DisConnected() {
+    if (!IsConned) return;
+    closesocket(client);
+    IsConned = false;
+}
+
+// 独立线程监听事件，在没有定时调用recv和send方法的情况下使用，以便及时获取到KeepAlive状态
+static void MonitorConnection() {
+    while (IsConned) {
+        DWORD ret = WSAWaitForMultipleEvents(1, &g_networkEvent, FALSE, 1000, FALSE);
+        if (ret == WSA_WAIT_EVENT_0) {
+            WSANETWORKEVENTS events;
+            WSAEnumNetworkEvents(client, g_networkEvent, &events);
+            if (events.lNetworkEvents & FD_CLOSE) {
+                std::cerr << "连接被远端关闭（KeepAlive 失效）" << std::endl;
+                GripperService_DisConnected();
+                break;
+            }
+        }
+    }
+}
+
 // 连接
 bool GripperService_Connection() {
     if (IsConned) return true;
@@ -45,14 +72,16 @@ bool GripperService_Connection() {
     }
 
     IsConned = true;
-    return true;
-}
 
-// 断开连接
-void GripperService_DisConnected() {
-    if (!IsConned) return;
-    closesocket(client);
-    IsConned = false;
+    // 启用 KeepAlive
+    int keepAlive = 1;
+    setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, (char*)&keepAlive, sizeof(keepAlive));
+
+    // 设置参数：5秒无活动开始探测
+    DWORD bytesReturned;
+    tcp_keepalive keepaliveOpts{ 1, 5000, 500 }; // 开启/5秒空闲/0.5秒间隔
+    WSAIoctl(client, SIO_KEEPALIVE_VALS, &keepaliveOpts, sizeof(keepaliveOpts), NULL, 0, &bytesReturned, NULL, NULL);
+    return true;
 }
 
 // 检查连接状态

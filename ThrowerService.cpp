@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <mstcpip.h>  // 关键头文件
+#pragma comment(lib, "Ws2_32.lib")  // 链接库
 
 static int parseIndex = 0;
 static std::vector<uint8_t> recvData(128);
@@ -149,6 +151,15 @@ bool ThrowerService_Connection() {
     IsConned = true;
     std::thread t(dataReceive);
     t.detach();
+
+    // 启用 KeepAlive
+    int keepAlive = 1;
+    setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, (char*)&keepAlive, sizeof(keepAlive));
+
+    // 设置参数：5秒无活动开始探测
+    DWORD bytesReturned;
+    tcp_keepalive keepaliveOpts{ 1, 5000, 500 }; // 开启/5秒空闲/0.5秒间隔
+    WSAIoctl(client, SIO_KEEPALIVE_VALS, &keepaliveOpts, sizeof(keepaliveOpts), NULL, 0, &bytesReturned, NULL, NULL);
     return true;
 }
 
