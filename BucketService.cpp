@@ -160,11 +160,12 @@ bool BucketService_IsConnected() {
 // 发送数据
 void BucketService_SendData(const char* data, int length) {
     if (!BucketService_IsConnected()) return;
-    try {
-        send(client, data, length, 0);
-    }
-    catch (const std::exception& e) {
-        std::cerr << "吊桶消息发送失败: " << e.what() << std::endl;
+
+    int result = send(client, data, length, 0);
+    if (result == SOCKET_ERROR) {
+        // 获取错误码并处理
+        int error = WSAGetLastError();
+        std::cerr << "吊桶消息发送失败，错误码: " << error << std::endl;
         BucketService_DisConnected();
     }
 }
