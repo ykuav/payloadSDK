@@ -22,11 +22,20 @@ static uint8_t THROWER_CONTROL_ALL = 0x22; // 全部舵机动作控制，4字节，分别是 关
 static uint8_t THROWER_CHARGING = 0x23; // 充电放电，4字节，分别是 放电/充电（0/1）、空、空、空
 static uint8_t THROWER_ALLOW_DETONATION = 0x24; // 允许起爆，4字节，分别是 取消/允许起爆（0/1）、空、空、空
 static uint8_t THROWER_STATE = 0x25; // 舵机状态，无需发送，每1秒自动上报一次，6字节，分别是 高度、起爆状态、充电状态、温度、总状态、起爆高度
+/* 新版修改，0x25返回40个字节
+* （8字节）：雷达高度、起爆高度、保留、保留、保留、保留、保留、保留
+* 1号弹（8字节）：起爆充电状态（0：不允许起爆，1：允许起爆，2：正在充电，127：未连接）、高度状态（0：高度不足，1：高度足够）、保留、保留、总状态（0：无法引爆，1：可以引爆）、保留、保留、保留
+* 2号弹（8字节）：起爆充电状态（0：不允许起爆，1：允许起爆，2：正在充电，127：未连接）、高度状态（0：高度不足，1：高度足够）、保留、保留、总状态（0：无法引爆，1：可以引爆）、保留、保留、保留
+* 3号弹（8字节）：起爆充电状态（0：不允许起爆，1：允许起爆，2：正在充电，127：未连接）、高度状态（0：高度不足，1：高度足够）、保留、保留、总状态（0：无法引爆，1：可以引爆）、保留、保留、保留
+* 4号弹（8字节）：起爆充电状态（0：不允许起爆，1：允许起爆，2：正在充电，127：未连接）、高度状态（0：高度不足，1：高度足够）、保留、保留、总状态（0：无法引爆，1：可以引爆）、保留、保留、保留
+* */
+
 static uint8_t THROWER_CONNECT_TEST = 0x26; // 连接测试，心跳包，定时发送，4字节，分别是 空、空、空、空
 static uint8_t THROWER_DETONATE_HEIGHT = 0x27; // 设置起爆高度，4字节，分别是 起爆高度、空、空、空
 static uint8_t THROWER_CONTROL_TWO_CENTER = 0x28; // 双舵机动作控制(中间俩)，4字节，分别是 关闭/开启（0/1）、空、空、空
 static uint8_t THROWER_CONTROL_TWO_LEFT = 0x29; // 双舵机动作控制(左侧俩1/2)，4字节，分别是 关闭/开启（0/1）、空、空、空
 static uint8_t THROWER_CONTROL_TWO_RIGHT = 0x2A; // 双舵机动作控制(右侧俩7/8)，4字节，分别是 关闭/开启（0/1）、空、空、空
+static uint8_t THROWER_CHARGING_AND_ALLOW = 0x31; // 充电放电和允许起爆一起，4字节，分别是 弹号（1-4）、状态（0/1）、空、空
 
 static std::vector<ThrowerStateCallback> throwerStateCallbacks;
 
@@ -290,7 +299,7 @@ void ThrowerService_CloseAll() {
     ThrowerService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
-// 充电放电，type=true是充电，type=false是放电
+// 充电放电，type=true是充电，type=false是放电(新版已弃用)
 void ThrowerService_Charging(BOOL type) {
     Msg msg;
     msg.SetMsgId(THROWER_CHARGING);
@@ -305,7 +314,7 @@ void ThrowerService_Charging(BOOL type) {
     ThrowerService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
-// 是否允许引爆，type=true是允许引爆，type=false是禁止引爆
+// 是否允许引爆，type=true是允许引爆，type=false是禁止引爆(新版已弃用)
 void ThrowerService_AllowDetonation(BOOL type) {
     Msg msg;
     msg.SetMsgId(THROWER_ALLOW_DETONATION);
@@ -315,6 +324,22 @@ void ThrowerService_AllowDetonation(BOOL type) {
     }
     else {
         payload[0] = static_cast<uint8_t>(0x00);
+    }
+    msg.SetPayload(payload);
+    ThrowerService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
+// 允许起爆和开始充电（新版使用）
+void chargingAndAllowDetonation(int index, BOOL _switch) {
+    Msg msg;
+    msg.SetMsgId(THROWER_CHARGING_AND_ALLOW);
+    std::vector<uint8_t> payload(4);
+    payload[0] = static_cast<uint8_t>(index);;
+    if (_switch) {
+        payload[1] = static_cast<uint8_t>(0x01);
+    }
+    else {
+        payload[1] = static_cast<uint8_t>(0x00);
     }
     msg.SetPayload(payload);
     ThrowerService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
