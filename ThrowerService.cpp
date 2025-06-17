@@ -330,7 +330,7 @@ void ThrowerService_AllowDetonation(BOOL type) {
 }
 
 // 允许起爆和开始充电（新版使用）
-void chargingAndAllowDetonation(int index, BOOL _switch) {
+void ThrowerService_chargingAndAllowDetonation(int index, BOOL _switch) {
     Msg msg;
     msg.SetMsgId(THROWER_CHARGING_AND_ALLOW);
     std::vector<uint8_t> payload(4);

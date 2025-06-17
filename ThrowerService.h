@@ -47,6 +47,8 @@ extern "C" {
     THROWERSERVICE_API void ThrowerService_Charging(BOOL type);
     // 是否允许引爆，type=true是允许引爆，type=false是禁止引爆
     THROWERSERVICE_API void ThrowerService_AllowDetonation(BOOL type);
+    // 允许起爆和开始充电（新版使用）
+    THROWERSERVICE_API void ThrowerService_chargingAndAllowDetonation(int index, BOOL _switch);
     // 设置引爆高度，灭火弹下落到指定高度后会自动引爆
     THROWERSERVICE_API void ThrowerService_SetDetonateHeight(int height);
     // 心跳包，抛投连接成功后需定时发送。抛投如果15s左右未收到心跳包，会自动重启
