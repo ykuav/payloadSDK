@@ -197,10 +197,10 @@ void ResqmeService_SafetySwitch(BOOL state) {
     msg.SetMsgId(RESQME_SAFETY_SWITCH);
     std::vector<uint8_t> payload(4);
     if (state) {
-        payload[1] = static_cast<uint8_t>(0x01);
+        payload[0] = static_cast<uint8_t>(0x01);
     }
     else {
-        payload[1] = static_cast<uint8_t>(0x00);
+        payload[0] = static_cast<uint8_t>(0x00);
     }
     msg.SetPayload(payload);
     ResqmeService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());

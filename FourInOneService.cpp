@@ -33,6 +33,7 @@ void FourInOneService_Cleanup() {
 // 设置IP
 void FourInOneService_SetIp(const char* ip) {
     Ip = std::string(ip);
+    HttpServerUrl = "http://" + Ip + ":8222";
 }
 
 // 数据接收
