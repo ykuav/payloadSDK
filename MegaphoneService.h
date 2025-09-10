@@ -9,6 +9,9 @@
 #define MEGAPHONESERVICE_API __declspec(dllimport)
 #endif
 
+// 其他回调函数类型定义
+typedef void(__stdcall* Callback)(uint8_t* data, int length);
+
 extern "C" {
     MEGAPHONESERVICE_API void MegaphoneService_Cleanup();
 
@@ -44,4 +47,7 @@ extern "C" {
     MEGAPHONESERVICE_API void MegaphoneService_StopPlayAlarm();
     // 俯仰控制
     MEGAPHONESERVICE_API void MegaphoneService_PitchControl(unsigned int pitch);
+
+    // 回调注册，
+    MEGAPHONESERVICE_API void MegaphoneService_RegisterCallback(Callback callback);
 }

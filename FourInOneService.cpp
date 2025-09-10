@@ -4,6 +4,8 @@
 #include <thread>
 #include "http_client.h"
 #include <mstcpip.h>  // 关键头文件
+#include <sstream>    // 需要包含这个头文件来使用 std::stringstream
+#include <iomanip>    // 需要包含这个头文件来使用 std::setw, std::setfill, std::hex, std::uppercase
 #pragma comment(lib, "Ws2_32.lib")  // 链接库
 
 // 全局变量
@@ -22,6 +24,8 @@ static uint8_t RED_BLUE_FLASHES = 0x07; // 红蓝
 static uint8_t SEROV_CONTROL = 0x09;	// 照明俯仰控制
 
 static std::vector<RadioCallback> radioCallbacks; // 收音回调函数
+
+static std::vector<OtherCallback> otherCallbacks; // 其他回调函数
 
 // 清理函数
 void FourInOneService_Cleanup() {
@@ -58,11 +62,18 @@ static void dataReceive() {
             for (int i = 0; i < bytesReceived; ++i) {
                 if (recvBuffer[i] == '[') {
                     // 检测到新报文头，且tmp已有数据时触发回调
-                    if (!tmp.empty() && tmp.size() >= 4 &&
-                        std::equal(tmp.begin(), tmp.begin() + 4, radioTarget))
+                    if (!tmp.empty() && tmp.size() >= 4)
                     {
-                        for (RadioCallback cb : radioCallbacks) {
-                            cb(tmp.data(), tmp.size());
+                        // 收音回调
+                        if (std::equal(tmp.begin(), tmp.begin() + 4, radioTarget)) {
+                            for (RadioCallback cb : radioCallbacks) {
+                                cb(tmp.data(), tmp.size());
+                            }
+                        }
+                        else { // 其他回调
+                            for (OtherCallback cb : otherCallbacks) {
+                                cb(tmp.data(), tmp.size());
+                            }
                         }
                     }
                     tmp.clear();
@@ -71,11 +82,18 @@ static void dataReceive() {
             }
 
             // 处理缓冲区末尾的残留数据（可选）
-            if (!tmp.empty() && tmp.size() >= 4 &&
-                std::equal(tmp.begin(), tmp.begin() + 4, radioTarget))
+            if (!tmp.empty() && tmp.size() >= 4)
             {
-                for (RadioCallback cb : radioCallbacks) {
-                    cb(tmp.data(), tmp.size());
+                // 收音回调
+                if (std::equal(tmp.begin(), tmp.begin() + 4, radioTarget)) {
+                    for (RadioCallback cb : radioCallbacks) {
+                        cb(tmp.data(), tmp.size());
+                    }
+                }
+                else { // 其他回调
+                    for (OtherCallback cb : otherCallbacks) {
+                        cb(tmp.data(), tmp.size());
+                    }
                 }
                 tmp.clear();
             }
@@ -165,8 +183,18 @@ void FourInOneService_RealTimeShout(uint8_t* data, int length) {
 
 // 设置音量
 void FourInOneService_SetVolumn(int volumn) {
-    std::string setVolume = "[14]";
-    std::string combinedData = setVolume + std::to_string(volumn);
+    // 1. 命令前缀
+    std::string setVolume = "[14]"; // 请确认此前缀与Kotlin中的SET_VOLUME常量一致
+
+    // 2. 将音量值转换为2位的十六进制字符串（大写），不足两位时前面补零
+    std::stringstream hexStream;
+    hexStream << std::uppercase << std::setw(2) << std::setfill('0') << std::hex << volumn;
+    std::string hexVolumn = hexStream.str();
+
+    // 3. 拼接前缀和十六进制字符串
+    std::string combinedData = setVolume + hexVolumn;
+
+    // 4. 发送数据
     FourInOneService_SendData(combinedData.c_str(), combinedData.length());
 }
 
@@ -407,4 +435,10 @@ void FourInOneService_RedBlueLedControl(int model) {
 void FourInOneService_RegisterCallback(RadioCallback callback)
 {
     radioCallbacks.push_back(callback);
+}
+
+// 注册收音以外的回调函数
+void FourInOneService_RegisterOtherCallback(OtherCallback callback)
+{
+    otherCallbacks.push_back(callback);
 }

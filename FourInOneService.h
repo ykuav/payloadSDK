@@ -10,8 +10,10 @@
 #define FOURINONESERVICE_API __declspec(dllimport)
 #endif
 
-// 回调函数类型定义
+// 收音回调函数类型定义
 typedef void(__stdcall* RadioCallback)(uint8_t* data, int length);
+// 其他回调函数类型定义
+typedef void(__stdcall* OtherCallback)(uint8_t* data, int length);
 
 extern "C" {
     // 初始化函数
@@ -70,4 +72,7 @@ extern "C" {
 
     // 回调注册，用于接收收音内容
     FOURINONESERVICE_API void FourInOneService_RegisterCallback(RadioCallback callback);
+
+    // 回调注册，用于接收收音以外的内容
+    FOURINONESERVICE_API void FourInOneService_RegisterOtherCallback(OtherCallback callback);
 }

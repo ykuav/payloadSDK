@@ -6,6 +6,8 @@
 #include <map>
 #include <mstcpip.h>  // 关键头文件
 #include <thread>
+#include <sstream>    // 需要包含这个头文件来使用 std::stringstream
+#include <iomanip>    // 需要包含这个头文件来使用 std::setw, std::setfill, std::hex, std::uppercase
 #pragma comment(lib, "Ws2_32.lib")  // 链接库
 
 // 全局变量
@@ -16,6 +18,8 @@ static int Port = 8519;
 static bool IsConned = false;
 static std::string HttpServerUrl = "http://" + Ip + ":8222";
 static WSAEVENT g_networkEvent = WSACreateEvent();
+
+static std::vector<Callback> callbacks; // 回调函数
 
 // 清理函数
 void MegaphoneService_Cleanup() {
@@ -53,6 +57,54 @@ static void MonitorConnection() {
     }
 }
 
+// 数据接收
+static void dataReceive() {
+    try {
+        while (MegaphoneService_IsConnected()) {
+            uint8_t recvBuffer[1024];
+            const int bytesReceived = recv(client,
+                reinterpret_cast<char*>(recvBuffer),
+                sizeof(recvBuffer), 0);
+
+            if (bytesReceived == SOCKET_ERROR) {
+                const int error = WSAGetLastError();
+                if (error == WSAEWOULDBLOCK) continue;
+                throw std::runtime_error("接收失败，错误码: " + std::to_string(error));
+            }
+            if (bytesReceived == 0) continue;
+
+            static std::vector<uint8_t> tmp;
+
+            for (int i = 0; i < bytesReceived; ++i) {
+                if (recvBuffer[i] == '[') {
+                    // 检测到新报文头，且tmp已有数据时触发回调
+                    if (!tmp.empty() && tmp.size() >= 4)
+                    {
+                        for (Callback cb : callbacks) {
+                            cb(tmp.data(), tmp.size());
+                        }
+                    }
+                    tmp.clear();
+                }
+                tmp.push_back(recvBuffer[i]);
+            }
+
+            // 处理缓冲区末尾的残留数据（可选）
+            if (!tmp.empty() && tmp.size() >= 4)
+            {
+                for (Callback cb : callbacks) {
+                    cb(tmp.data(), tmp.size());
+                }
+                tmp.clear();
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "喊话器消息接收错误: " << e.what() << std::endl;
+        MegaphoneService_DisConnected();
+    }
+}
+
 // 连接
 bool MegaphoneService_Connection() {
     if (IsConned) return true;
@@ -64,6 +116,8 @@ bool MegaphoneService_Connection() {
     }
     IsConned = true;
     MegaphoneService_SetVolumn(30);
+    std::thread t(dataReceive);
+    t.detach();
 
     // 启用 KeepAlive
     int keepAlive = 1;
@@ -128,8 +182,16 @@ void MegaphoneService_RealTimeShout(uint8_t* data, int length) {
 
 // 设置音量
 void MegaphoneService_SetVolumn(int volumn) {
-    std::string setVolume = "[14]";
-    std::string combinedData = setVolume + std::to_string(volumn);
+    // 1. 命令前缀
+    std::string setVolume = "[14]"; // 请确认此前缀与Kotlin中的SET_VOLUME常量一致
+
+    // 2. 将音量值转换为2位的十六进制字符串（大写），不足两位时前面补零
+    std::stringstream hexStream;
+    hexStream << std::uppercase << std::setw(2) << std::setfill('0') << std::hex << volumn;
+    std::string hexVolumn = hexStream.str();
+
+    // 3. 拼接前缀和十六进制字符串
+    std::string combinedData = setVolume + hexVolumn;
     MegaphoneService_SendData(combinedData.c_str(), combinedData.length());
 }
 
@@ -295,4 +357,9 @@ void MegaphoneService_PitchControl(unsigned int pitch) {
     catch (const std::exception& ex) {
         std::cerr << "喊话器俯仰控制失败: " << ex.what() << std::endl;
     }
+}
+
+void MegaphoneService_RegisterCallback(Callback callback)
+{
+    callbacks.push_back(callback);
 }
