@@ -27,11 +27,11 @@ class Msg {
 };
 
 class CrcUtil {
-public:
-    static uint8_t Crc8Calculate(const uint8_t* data, size_t length);
+    public:
+        static uint8_t Crc8Calculate(const uint8_t* data, size_t length);
 
-private:
-    static const uint8_t CRC8Table[256];
+    private:
+        static const uint8_t CRC8Table[256];
 };
 
 void printHex(const std::vector<uint8_t>& data);

@@ -212,6 +212,8 @@
     <ClInclude Include="LightService.h" />
     <ClInclude Include="OpusWrapper.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PLLightService.h" />
+    <ClInclude Include="PLMsg.h" />
     <ClInclude Include="ResqmeService.h" />
     <ClInclude Include="SlowDescentDeviceService.h" />
     <ClInclude Include="ThrowerService.h" />
@@ -238,6 +240,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PLLightService.cpp" />
+    <ClCompile Include="PLMsg.cpp" />
     <ClCompile Include="ResqmeService.cpp" />
     <ClCompile Include="SlowDescentDeviceService.cpp" />
     <ClCompile Include="ThrowerService.cpp" />

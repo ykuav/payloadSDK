@@ -66,6 +66,12 @@
     <ClInclude Include="WaterBranchService.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="PLLightService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PLMsg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -123,6 +129,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="WaterBranchService.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PLLightService.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PLMsg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
