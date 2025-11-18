@@ -197,23 +197,33 @@ void ThrowerService_SendData(const char* data, int length) {
     }
 }
 
-// 打开舵机，index是舵机序号，0-5
+// 打开舵机，index是舵机序号，0-2:1到3号，5-7:4到6号
 void ThrowerService_Open(int index) {
     Msg msg;
     msg.SetMsgId(THROWER_CONTROL_ONE);
     std::vector<uint8_t> payload(4);
-    payload[0] = static_cast<uint8_t>(index);
+    if (index > 2) {
+        payload[0] = static_cast<uint8_t>(index + 2);
+    }
+    else {
+        payload[0] = static_cast<uint8_t>(index);
+    }
     payload[1] = static_cast<uint8_t>(0x01);
     msg.SetPayload(payload);
     ThrowerService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
-// 舵机复位（关闭），index是舵机序号，0-5
+// 舵机复位（关闭），index是舵机序号，0-2:1到3号，5-7:4到6号
 void ThrowerService_Close(int index) {
     Msg msg;
     msg.SetMsgId(THROWER_CONTROL_ONE);
     std::vector<uint8_t> payload(4);
-    payload[0] = static_cast<uint8_t>(index);
+    if (index > 2) {
+        payload[0] = static_cast<uint8_t>(index + 2);
+    }
+    else {
+        payload[0] = static_cast<uint8_t>(index);
+    }
     payload[1] = static_cast<uint8_t>(0x00);
     msg.SetPayload(payload);
     ThrowerService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
