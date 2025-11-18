@@ -182,8 +182,9 @@ void EmitterService_SendData(const char* data, int length) {
 void EmitterService_Launch(int index) {
     Msg msg;
     msg.SetMsgId(EMITTER_LAUNCH);
-    std::vector<uint8_t> payload(16);
+    std::vector<uint8_t> payload(10);
     payload[index] = static_cast<uint8_t>(0x01);
+    payload[6] = static_cast<uint8_t>(0x01);
     msg.SetPayload(payload);
     EmitterService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }

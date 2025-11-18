@@ -359,6 +359,13 @@ void MegaphoneService_PitchControl(unsigned int pitch) {
     }
 }
 
+// ÷ÿ∆Ù…Ë±∏
+void MegaphoneService_Reboot()
+{
+    std::string reboot = "[88]";
+    MegaphoneService_SendData(reboot.c_str(), reboot.length());
+}
+
 void MegaphoneService_RegisterCallback(Callback callback)
 {
     callbacks.push_back(callback);

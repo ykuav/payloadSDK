@@ -16,8 +16,8 @@ static std::string Ip = "192.168.144.34"; // 必须使用std::string，不然C#传过来的
 static int Port = 8519;
 static bool IsConned = false;
 
-static uint8_t BUCKET_STATE_RECEIVE = 0x25; // 接收心跳包
-static uint8_t BUCKET_STATE_SEND = 0x26; // 发送心跳包
+static uint8_t BUCKET_SAFETY_SWITCH = 0x32; // 安全开关
+static uint8_t BUCKET_BARREL_STATE = 0x34; // 水桶状态
 static uint8_t BUCKET_BARREL_CONTROL = 0x36; // 水桶控制
 static uint8_t BUCKET_HOOK_CONTROL = 0x38; // 挂钩控制
 
@@ -117,7 +117,7 @@ static void dataReceive() {
                         if (recvDataLast[0] != 0x8D) {
                             continue;
                         }
-                        if (recvDataLast[2] == BUCKET_STATE_RECEIVE) {
+                        if (recvDataLast[2] == BUCKET_BARREL_STATE) {
                             BucketStateCallback(recvDataLast.data(), recvDataLast.size());
                         }
                     }
@@ -181,6 +181,16 @@ void BucketService_SendData(const char* data, int length) {
     }
 }
 
+// 吊桶安全开关，0关，1开
+void BucketService_SafetySwitchControl(int controlType) {
+    Msg msg;
+    msg.SetMsgId(BUCKET_SAFETY_SWITCH);
+    std::vector<uint8_t> payload(1);
+    payload[0] = static_cast<uint8_t>(controlType);
+    msg.SetPayload(payload);
+    BucketService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
 // 操作水桶开关，0停，1开（升），2关（降）
 void BucketService_BarrelControl(int controlType) {
     Msg msg;
@@ -197,15 +207,6 @@ void BucketService_HookControl(int controlType) {
     msg.SetMsgId(BUCKET_HOOK_CONTROL);
     std::vector<uint8_t> payload(4);
     payload[0] = static_cast<uint8_t>(controlType);
-    msg.SetPayload(payload);
-    BucketService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
-}
-
-// 发送心跳包
-void BucketService_Heartbeat() {
-    Msg msg;
-    msg.SetMsgId(BUCKET_STATE_SEND);
-    std::vector<uint8_t> payload(4);
     msg.SetPayload(payload);
     BucketService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }

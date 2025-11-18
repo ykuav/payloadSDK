@@ -47,6 +47,8 @@ extern "C" {
     MEGAPHONESERVICE_API void MegaphoneService_StopPlayAlarm();
     // 俯仰控制
     MEGAPHONESERVICE_API void MegaphoneService_PitchControl(unsigned int pitch);
+    // 重启设备
+    MEGAPHONESERVICE_API void MegaphoneService_Reboot();
 
     // 回调注册，
     MEGAPHONESERVICE_API void MegaphoneService_RegisterCallback(Callback callback);
