@@ -72,6 +72,9 @@
     <ClInclude Include="PLMsg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AllInOneService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -135,6 +138,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PLMsg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AllInOneService.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -16,7 +16,7 @@ typedef void(__stdcall* RadioCallback)(uint8_t* data, int length);
 typedef void(__stdcall* OtherCallback)(uint8_t* data, int length);
 
 extern "C" {
-    // 初始化函数
+    // 清理函数
     FOURINONESERVICE_API void FourInOneService_Cleanup();
 
     // IP设置

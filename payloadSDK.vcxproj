@@ -200,6 +200,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AllInOneService.h" />
     <ClInclude Include="BucketService.h" />
     <ClInclude Include="CaptureNetService.h" />
     <ClInclude Include="common.h" />
@@ -221,6 +222,7 @@
     <ClInclude Include="WaterGunService.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AllInOneService.cpp" />
     <ClCompile Include="BucketService.cpp" />
     <ClCompile Include="CaptureNetService.cpp" />
     <ClCompile Include="common.cpp" />
