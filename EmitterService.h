@@ -25,6 +25,8 @@ extern "C" {
 
     // 发射，index是发射口序号，0-5
     EMITTERSERVICE_API void EmitterService_Launch(int index);
+    // 安全开关
+    EMITTERSERVICE_API void EmitterService_SafetySwitch(bool isOpen);
     // 发射口状态获取
     EMITTERSERVICE_API void EmitterService_GetStatus();
 

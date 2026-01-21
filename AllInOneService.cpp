@@ -276,7 +276,6 @@ void AllInOneService_StopPlayAudio() {
 
 // ²¥·Å¾¯±¨
 void AllInOneService_PlayAlarm() {
-    AllInOneService_StopPlayAlarm();
     std::string alarmPlay = "[18]";
     AllInOneService_Megaphone_SendData(alarmPlay.c_str(), alarmPlay.length());
 }

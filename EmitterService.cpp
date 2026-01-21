@@ -189,6 +189,18 @@ void EmitterService_Launch(int index) {
     EmitterService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
+// 安全开关
+void EmitterService_SafetySwitch(bool isOpen) {
+    Msg msg;
+    msg.SetMsgId(EMITTER_LAUNCH);
+    std::vector<uint8_t> payload(10);
+    if (isOpen) {
+        payload[6] = static_cast<uint8_t>(0x01);
+    }
+    msg.SetPayload(payload);
+    EmitterService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
 // 发射口状态查询
 void EmitterService_GetStatus() {
     Msg msg;
