@@ -12,7 +12,7 @@
 static SOCKET client_megaphone = INVALID_SOCKET;
 static SOCKET client_main = INVALID_SOCKET;
 static SOCKET client_ptz = INVALID_SOCKET;
-static std::string Ip = "192.168.144.27"; // 必须使用std::string，不然C#传过来的ip后半部分会乱码
+static std::string Ip = "192.168.144.37"; // 必须使用std::string，不然C#传过来的ip后半部分会乱码
 static int port_megaphone = 8519;
 static int port_main = 8529;
 static int port_ptz = 12345;

@@ -206,6 +206,7 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="EmitterService.h" />
     <ClInclude Include="ExtinguisherService.h" />
+    <ClInclude Include="FourInOne2Service.h" />
     <ClInclude Include="FourInOneService.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="http_client.h" />
@@ -229,6 +230,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EmitterService.cpp" />
     <ClCompile Include="ExtinguisherService.cpp" />
+    <ClCompile Include="FourInOne2Service.cpp" />
     <ClCompile Include="FourInOneService.cpp" />
     <ClCompile Include="GripperService.cpp" />
     <ClCompile Include="GripperService.h" />

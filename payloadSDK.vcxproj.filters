@@ -75,6 +75,9 @@
     <ClInclude Include="AllInOneService.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FourInOne2Service.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -141,6 +144,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AllInOneService.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FourInOne2Service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
