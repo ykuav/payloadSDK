@@ -19,6 +19,7 @@ static bool IsConned = false;
 static uint8_t WATERGUN_TOLEFT = 0x33; // 往左
 static uint8_t WATERGUN_TORIGHT = 0x34; // 往右
 static uint8_t WATERGUN_MODESWITCH = 0x35;       // 模式切换
+static uint8_t WATERGUN_NOZZLESWITCH = 0x36;     // 喷头切换
 static uint8_t WATERGUN_STATE_SEND = 0x26;       // 发送心跳包
 static uint8_t WATERGUN_STATE_RECEIVE = 0x25;    // 接收心跳包
 
@@ -119,7 +120,7 @@ static void dataReceive() {
                             continue;
                         }
                         if (recvDataLast[2] == WATERGUN_STATE_RECEIVE) {
-                            waterGunStateCallback(recvDataLast[3], recvDataLast[4]);
+                            waterGunStateCallback(recvDataLast[3], recvDataLast[4], recvDataLast[5]);
                         }
                     }
                 }
@@ -127,7 +128,7 @@ static void dataReceive() {
         }
     }
     catch (const std::exception& e) {
-        std::cerr << "水枪消息接收错误: " << e.what() << std::endl;
+        std::cerr << "清洗水枪消息接收错误: " << e.what() << std::endl;
         WaterGunService_DisConnected();
     }
 }
@@ -201,6 +202,19 @@ void WaterGunService_ModeSwitch() {
     Msg msg;
     msg.SetMsgId(WATERGUN_MODESWITCH);
     std::vector<uint8_t> payload(4);
+    msg.SetPayload(payload);
+    WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
+}
+
+/* 喷头切换
+* nozzleType为0时，切换到清水喷头
+* nozzleType1时，切换到泡沫喷头
+* */
+void WaterGunService_NozzleSwitch(int nozzleType) {
+    Msg msg;
+    msg.SetMsgId(WATERGUN_NOZZLESWITCH);
+    std::vector<uint8_t> payload(4);
+    payload[0] = static_cast<uint8_t>(nozzleType);
     msg.SetPayload(payload);
     WaterGunService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }

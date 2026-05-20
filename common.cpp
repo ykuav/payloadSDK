@@ -7,6 +7,8 @@
 #include <winhttp.h>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <cwctype>
 #pragma comment(lib, "ws2_32.lib")
 
 // 初始化 Winsock
@@ -193,8 +195,16 @@ std::vector<BYTE> BuildMultipartBody(const std::wstring& filePath, const std::st
     std::vector<char> fileData(fileSize);
     file.read(fileData.data(), fileSize);
 
-    // 2. 转换文件名到 UTF-8 并转义
-    std::string filenameUtf8 = WideToUtf8(filePath.substr(filePath.find_last_of(L"\\/") + 1)); // 提取文件名
+    // 2. 使用 NormalizeFileExtensionToLower 处理文件名
+    std::wstring normalizedPath = NormalizeFileExtensionToLower(filePath);
+
+    // 提取文件名（从标准化后的路径）
+    std::wstring fileNameOnly = normalizedPath.substr(normalizedPath.find_last_of(L"\\/") + 1);
+
+    // 转换为 UTF-8
+    std::string filenameUtf8 = WideToUtf8(fileNameOnly);
+
+    // 转义特殊字符
     std::string escapedFilename;
     for (char c : filenameUtf8) {
         if (c == '"' || c == '\\' || c == '\r' || c == '\n') {
@@ -354,4 +364,28 @@ std::string UrlEncode(const std::string& value) {
     }
 
     return escaped.str();
+}
+
+std::wstring NormalizeFileExtensionToLower(const std::wstring& fullPath) {
+    size_t slash = fullPath.find_last_of(L"/\\");
+    std::wstring name = (slash == std::wstring::npos)
+        ? fullPath
+        : fullPath.substr(slash + 1);
+
+    size_t dot = name.find_last_of(L'.');
+    if (dot == std::wstring::npos || dot == name.length() - 1)
+        return fullPath;
+
+    std::wstring base = name.substr(0, dot);
+    std::wstring ext = name.substr(dot + 1);
+
+    // 转小写
+    std::transform(ext.begin(), ext.end(), ext.begin(),
+        [](wchar_t c) { return std::towlower(c); });
+
+    // 替换原路径中的文件名
+    if (slash == std::wstring::npos)
+        return base + L"." + ext;
+    else
+        return fullPath.substr(0, slash + 1) + base + L"." + ext;
 }

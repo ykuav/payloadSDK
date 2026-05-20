@@ -39,4 +39,5 @@ std::string WideToUtf8(const std::wstring& wstr);
 std::wstring Utf8ToWide(const std::string& str);
 bool UploadFile(const std::wstring& serverUrl, const std::wstring& filePath);
 std::string UrlEncode(const std::string& value);
+std::wstring NormalizeFileExtensionToLower(const std::wstring& fullPath);
 #endif

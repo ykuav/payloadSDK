@@ -10,7 +10,7 @@
 #endif
 
 // 回调函数类型定义
-typedef void(__stdcall* WaterGunServiceStateCallback)(int state, int locationStatus);
+typedef void(__stdcall* WaterGunServiceStateCallback)(int state, int locationStatus, int nozzleType);
 
 // C接口封装
 extern "C" {
@@ -35,6 +35,8 @@ extern "C" {
     * 注：状态值从回调函数里面获取
     * */
     WATERGUNSERVICE_API void WaterGunService_ModeSwitch();
+    // 切换喷头，0：清水喷头，1：泡沫喷头
+    WATERGUNSERVICE_API void WaterGunService_NozzleSwitch(int nozzleType);
     // 发送心跳包
     WATERGUNSERVICE_API void WaterGunService_Heartbeat();
 
