@@ -217,6 +217,7 @@
     <ClInclude Include="PLLightService.h" />
     <ClInclude Include="PLMsg.h" />
     <ClInclude Include="ResqmeService.h" />
+    <ClInclude Include="SlowDescentDevice200Service.h" />
     <ClInclude Include="SlowDescentDeviceService.h" />
     <ClInclude Include="ThrowerService.h" />
     <ClInclude Include="WaterBranchService.h" />
@@ -247,6 +248,7 @@
     <ClCompile Include="PLLightService.cpp" />
     <ClCompile Include="PLMsg.cpp" />
     <ClCompile Include="ResqmeService.cpp" />
+    <ClCompile Include="SlowDescentDevice200Service.cpp" />
     <ClCompile Include="SlowDescentDeviceService.cpp" />
     <ClCompile Include="ThrowerService.cpp" />
     <ClCompile Include="WaterBranchService.cpp" />
