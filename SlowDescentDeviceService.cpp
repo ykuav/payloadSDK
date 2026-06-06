@@ -66,6 +66,11 @@ void SlowDescentDeviceService_SetIp(const char* ip) {
     Ip = std::string(ip);
 }
 
+// ÉèÖÃ¶Ë¿Ú
+void SlowDescentDeviceService_SetPort(int port) {
+    Port = port;
+}
+
 static void resetBuffer() {
     std::cerr << "Çå¿ÕrecvData: " << std::endl;
     recvData.clear();

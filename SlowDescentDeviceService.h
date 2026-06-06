@@ -17,6 +17,8 @@ extern "C" {
     SLOWDESCENTDEVICESERVICE_API void SlowDescentDeviceService_Cleanup();
     // IP设置
     SLOWDESCENTDEVICESERVICE_API void SlowDescentDeviceService_SetIp(const char* ip);
+    // 端口设置
+    SLOWDESCENTDEVICESERVICE_API void SlowDescentDeviceService_SetPort(int port);
 
     // 连接与断开
     SLOWDESCENTDEVICESERVICE_API bool SlowDescentDeviceService_Connection();
