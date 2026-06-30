@@ -310,6 +310,7 @@ void MegaphoneService_StopPlayAudio() {
 // ²¥·Å¾¯±¨
 void MegaphoneService_PlayAlarm() {
     MegaphoneService_StopPlayAlarm();
+    Sleep(100);
     std::string alarmPlay = "[18]";
     MegaphoneService_SendData(alarmPlay.c_str(), alarmPlay.length());
 }

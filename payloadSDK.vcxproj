@@ -203,6 +203,7 @@
     <ClInclude Include="AllInOneService.h" />
     <ClInclude Include="BucketService.h" />
     <ClInclude Include="CaptureNetService.h" />
+    <ClInclude Include="CargoBoxService.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="EmitterService.h" />
     <ClInclude Include="ExtinguisherService.h" />
@@ -227,6 +228,7 @@
     <ClCompile Include="AllInOneService.cpp" />
     <ClCompile Include="BucketService.cpp" />
     <ClCompile Include="CaptureNetService.cpp" />
+    <ClCompile Include="CargoBoxService.cpp" />
     <ClCompile Include="common.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EmitterService.cpp" />

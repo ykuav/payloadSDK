@@ -316,6 +316,8 @@ void FourInOne2Service_StopPlayAudio() {
 
 // ²¥·Å¾¯±¨
 void FourInOne2Service_PlayAlarm() {
+    FourInOne2Service_StopPlayAlarm();
+    Sleep(100);
     std::string alarmPlay = "[18]";
     FourInOne2Service_Megaphone_SendData(alarmPlay.c_str(), alarmPlay.length());
 }

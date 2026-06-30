@@ -81,6 +81,9 @@
     <ClInclude Include="SlowDescentDevice200Service.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CargoBoxService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -153,6 +156,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SlowDescentDevice200Service.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CargoBoxService.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
