@@ -135,7 +135,7 @@ static void dataReceive() {
         }
     }
     catch (const std::exception& e) {
-        std::cerr << "清洗水枪消息接收错误: " << e.what() << std::endl;
+        std::cerr << "运输箱消息接收错误: " << e.what() << std::endl;
         CargoBoxService_DisConnected();
     }
 }
@@ -176,7 +176,7 @@ void CargoBoxService_SendData(const char* data, int length) {
     if (result == SOCKET_ERROR) {
         // 获取错误码并处理
         int error = WSAGetLastError();
-        std::cerr << "清洗水枪消息发送失败，错误码: " << error << std::endl;
+        std::cerr << "运输箱消息发送失败，错误码: " << error << std::endl;
         CargoBoxService_DisConnected();
     }
 }
@@ -204,12 +204,12 @@ void CargoBoxService_IncreasePower() {
 void CargoBoxService_ReducePower() {
     Msg msg;
     msg.SetMsgId(CARGOBOX_DECELERATE);
-    std::vector<uint8_t> payload(4);
+    std::vector<uint8_t> payload(1);
     msg.SetPayload(payload);
     CargoBoxService_SendData(reinterpret_cast<const char*>(msg.GetMsg().data()), msg.length());
 }
 
-// 注册消防水枪状态回调函数
+// 注册运输箱状态回调函数
 void CargoBoxService_RegisterCallback(CargoBoxServiceStateCallback callback)
 {
     cargoBoxStateCallbacks.push_back(callback);
